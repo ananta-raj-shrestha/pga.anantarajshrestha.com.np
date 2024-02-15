@@ -16,6 +16,7 @@ currentLat = crd.latitude;
 currentLng = crd.longitude;
 document.getElementById('lat').innerHTML = currentLat;
 document.getElementById('lng').innerHTML = currentLng;
+
 // console.log('Your current position is:');
 // console.log(`Latitude : ${crd.latitude}`);
 // console.log(crd.longitude);
@@ -82,12 +83,28 @@ function fetchJSONFile(url, callback) {
    
         //Seismic Zone Factor Calculation
 const finalPGA = data[i]["PGA(g)"];
-const closestSZF = szFactor.reduce((a, b) => {
-    return Math.abs(b - finalPGA) < Math.abs(a - finalPGA) ? b : a;
-});
-        // console.log(szFactor);
-        // console.log("Hello");
+
+let closestSZF = Math.min(...szFactor.filter(num => num >=  finalPGA));
+// const closestSZF = szFactor.reduce((a, b) => {
+//     return Math.abs(b - finalPGA) < Math.abs(a - finalPGA) ? b : a;
+// });
+//         // console.log(szFactor);
+//         // console.log("Hello");
 outputSZF.innerHTML = closestSZF;  
+
+    //Map Marker
+    // let mapOptions = {
+    //     center:[28.17855984939698,84.03442382812501],
+    //     zoom:10
+    // }
+//Location Marker
+    var myMarker = L.marker((currentLat), {draggable: true}).addTo(map)
+    .bindPopup("You are at Latitude:" + currentLat + " , Longitude:" + currentLng +",PGA:"+finalPGA +",Seismic Zone Factor:"+closestSZF).openPopup();
+
+myMarker.on("dragend", function(event){
+    var newCoords = event.target.getLatLng().toString();
+    myMarker.bindPopup("New Coords: "+newCoords).openPopup();
+});
         }
             
     }
@@ -104,6 +121,8 @@ console.warn(`ERROR(${err.code}): ${err.message}`);
 
 navigator.geolocation.getCurrentPosition(success, error, options);
 }
+
+//From Map Location Picker
 let mapOptions = {
     center:[28.17855984939698,84.03442382812501],
     zoom:10
@@ -114,7 +133,7 @@ let map = new L.map('map' , mapOptions);
 let layer = new L.TileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
 map.addLayer(layer);
 
-//From Map Location Picker
+
 let marker = null;
 map.on('click', (event)=> {
 
@@ -192,12 +211,23 @@ map.on('click', (event)=> {
        
             //Seismic Zone Factor Calculation
     const finalPGA = data[i]["PGA(g)"];
-    const closestSZF = szFactor.reduce((a, b) => {
-        return Math.abs(b - finalPGA) < Math.abs(a - finalPGA) ? b : a;
-    });
+
+    var closestSZF = Math.min(...szFactor.filter(num => num >= finalPGA));
+    // const closestSZF = szFactor.reduce((a, b) => {
+    //     return Math.abs(b - finalPGA) < Math.abs(a - finalPGA) ? b : a;
+    // });
             // console.log(szFactor);
             // console.log("Hello");
     outputSZF.innerHTML = closestSZF;  
+
+    //Map Marker
+    var myMarker = L.marker((event.latlng), {draggable: true}).addTo(map)
+    .bindPopup("You are at Latitude:" + currentLat + " , Longitude:" + currentLng +",PGA:"+finalPGA +",Seismic Zone Factor:"+closestSZF).openPopup();
+
+myMarker.on("dragend", function(event){
+    var newCoords = event.target.getLatLng().toString();
+    myMarker.bindPopup("New Coords: "+newCoords).openPopup();
+});
             }
                 
         }
@@ -209,7 +239,7 @@ map.on('click', (event)=> {
 
     
 })
- 
+
 document.onkeydown = (e) => {
     if (e.key == 123) {
         e.preventDefault();
